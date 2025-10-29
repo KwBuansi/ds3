@@ -1,14 +1,160 @@
 <html>
   <head>
     <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+    <script>
+      AFRAME.registerComponent('display-position', {
+        tick: function () {
+          const pos = this.el.object3D.position;
+          const textEl = document.querySelector('#position-text');
+          if (textEl) {
+            textEl.setAttribute('value', `x: ${pos.x.toFixed(2)} y: ${pos.y.toFixed(2)} z: ${pos.z.toFixed(2)}`);
+          }
+        }
+      });
+      </script>
+      <script>
+      AFRAME.registerComponent('kill-on-touch', {
+        schema: { 
+          target: { type: 'selector' }, 
+          radius: { type: 'number', default: 1 },
+          maxDistance: { type: 'number', default: 300}
+        },
+
+        init: function () {
+          const fade = document.createElement('a-entity');
+          fade.setAttribute('id', 'fade-overlay');
+          fade.setAttribute('geometry', 'primitive: plane; height: 100; width: 100');
+          fade.setAttribute('material', 'color: black; opacity: 0; side: double');
+          fade.setAttribute('position', '0 0 -1');
+          fade.setAttribute('visible', 'true');
+          this.el.sceneEl.camera.el.appendChild(fade);
+          this.fade = fade;
+          this.isDead = false;
+        },
+
+        tick: function () {
+          if (this.isDead || !this.data.target) return;
+
+            const playerPos = this.el.object3D.position;
+            const targetPos = this.data.target.object3D.position;
+            const distance = playerPos.distanceTo(targetPos);
+
+          //If player is out-of-bounds, they die
+          if (distance < this.data.radius || distance > this.data.maxDistance) {
+            this.die();
+            return;
+          }
+        },
+
+        die: function () {
+          this.isDead = true;
+          console.log('You are DEAD!💀')
+
+          // Disable controls
+          this.el.removeAttribute('wasd-controls');
+          this.el.removeAttribute('look-controls');
+          this.controlsDisabled = true;
+          
+          const fade = this.fade;
+          const material = fade.getAttribute('material');
+
+          let opacity = 0;
+          const fadeInterval = setInterval(() => {
+            opacity += 0.05;
+            fade.setAttribute('material', 'opacity', opacity);
+            if (opacity >= 1) {
+              clearInterval(fadeInterval);
+
+              setTimeout(() => {
+                this.el.setAttribute('position', '0 1.6 0');
+                this.respawn();
+              }, 500);
+            }
+          }, 50);
+        },
+
+        respawn: function () {
+          let opacity = 1;
+          const fade = this.fade;
+          const fadeOut = setInterval(() => {
+            opacity -= 0.05;
+            fade.setAttribute('material', 'opacity', opacity);
+            if (opacity <= 0) {
+              clearInterval(fadeOut);
+              // Reenable controls
+              if (this.controlsDisabled) {
+              this.el.setAttribute('wasd-controls', 'acceleration:100: fly:true');
+              this.el.setAttribute('look-controls', 'pointerLockEnabled: true');
+              this.controlsDisabled = false;
+
+              }
+              this.isDead = false;
+            }
+          }, 50);
+        }
+      });
+
+      //Apply HUD
+      window.addEventListener('load', () => {
+        document.querySelector('#player').setAttribute('display-position', '');
+      });
+    </script>
   </head>
   <body>
     <a-scene>
-      <a-box position="-1 0.5 -3" rotation="0 45 0" color="#4CC3D9"></a-box>
-      <a-sphere position="0 1.25 -5" radius="1.25" color="#EF2D5E"></a-sphere>
-      <a-cylinder position="1 0.75 -3" radius="0.5" height="1.5" color="#FFC65D"></a-cylinder>
-      <a-plane position="0 0 -4" rotation="-90 0 0" width="4" height="4" color="#7BC8A4"></a-plane>
-      <a-sky color="#ECECEC"></a-sky>
+        <a-sky src="planets_textures/nightsky.jpg"></a-sky>
+
+        <a-sphere id="sun" position="0 1.25 -5" radius="3" 
+          src="planets_textures/sun.jpeg" rotation ="0 0 0" 
+          animation="property: rotation; to: 0 360 0; loop: true; dur: 22224"></a-sphere>
+        
+        <a-sphere id="mercury" position="3.9 1.25 -5" radius="0.1" 
+        src="planets_textures/mercury.jpeg" rotation ="0 0 0" 
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 58650"></a-sphere>
+        
+        <a-sphere id="venus" position="7.2 1.25 -5" radius="0.2" 
+          src="planets_textures/venus.jpeg" rotation ="0 0 0" 
+          animation="property: rotation; to: 0 360 0; loop: true; dur: 243000"></a-sphere>
+        
+        <a-sphere id="earth" position="10 1.25 -5" radius="0.3" 
+          src="planets_textures/earth.jpeg" rotation ="0 0 0" 
+          animation="property: rotation; to: 0 360 0; loop: true; dur: 864"></a-sphere>
+        
+        <a-sphere id="mars" position="15.2 1.25 -5" radius="0.2" 
+          src="planets_textures/mars.jpeg" rotation ="0 0 0" 
+          animation="property: rotation; to: 0 360 0; loop: true; dur: 8864"></a-sphere>
+        
+        <a-sphere id="jupiter" position="52 1.25 -5" radius="1.5" 
+          src="planets_textures/jupiter.jpeg" rotation ="0 0 0" 
+          animation="property: rotation; to: 0 360 0; loop: true; dur: 3528"></a-sphere>
+        
+        <a-sphere id="saturn" position="95 1.25 -5" radius="1.2" 
+          src="planets_textures/saturn.jpeg" rotation ="0 0 0" 
+          animation="property: rotation; to: 0 360 0; loop: true; dur: 3952"></a-sphere>
+        
+        <a-sphere id="uranus" position="192 1.25 -5" radius="0.7" 
+          src="planets_textures/uranus.jpeg" rotation ="0 0 0" 
+          animation="property: rotation; to: 0 360 0; loop: true; dur: 60480"></a-sphere>
+        
+        <a-sphere id="neptune" position="301 1.25 -5" radius="0.7" 
+          src="planets_textures/neptune.jpeg" rotation ="0 0 0" 
+          animation="property: rotation; to: 0 360 0; loop: true; dur: 56420"></a-sphere>
+        
+        <a-entity 
+          id="player"
+          camera 
+          look-controls="pointerLockEnabled: true"
+          wasd-controls="acceleration:100; fly:true" 
+          position="0 1.6 0"
+          kill-on-touch="target: #sun; radius: 3.5"
+          >
+        <a-entity id="hud" position="0 -0.5 -1">
+          <a-text id="position-text" value=""
+                  color="white"
+                  align="center"
+                  scale="0.5 0.5 0.5">
+          </a-text>        
+      </a-entity>
     </a-scene>
   </body>
 </html>
