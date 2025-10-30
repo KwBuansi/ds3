@@ -68,6 +68,8 @@
       z-index: 1003;
     }
 
+    #a-scene { display: block; }
+
     #mission-text {
       font-size: 36px;
       margin-bottom: 40px;
@@ -142,8 +144,10 @@
   </div>
 
   <div id="info-panel" style="display: none">
-    <h1>Find the Alien Dog</h1>
-    <div id="position-display">Position: Loading...</div>
+    <a-entity position="0 2 -3">
+      <h1>Find the Alien Dog</h1>
+      <div id="position-display">Position: Loading...</div>
+    </a-entity>
   </div>
 
   <div id="controls" style="display: none">
@@ -155,12 +159,12 @@
     </ul>
   </div>
 
-  <a-scene style="display: none">
+  <a-scene vr-mode-ui="enabled: true"  embedded style="width: 100%; height: 100vh;">
     <a-sky src="planets_textures/nightsky.jpg"></a-sky>
 
     <a-sphere
       id="sun"
-      position="0 1.25 -5"
+      position="0 1.25 0"
       radius="3"
       src="planets_textures/sun.jpeg"
       rotation="0 0 0"
@@ -169,16 +173,117 @@
       data-radius="3"
     ></a-sphere>
 
-    <a-sphere
-      id="earth"
-      position="10 1.25 -5"
-      radius="0.3"
-      src="planets_textures/earth.jpeg"
-      rotation="0 0 0"
-      animation="property: rotation; to: 0 360 0; loop: true; dur: 864"
-      class="collidable"
-      data-radius="0.3"
-    ></a-sphere>
+    <a-entity id="mercury-orbit" rotation="0 0 0" animation="property: rotation; to: 0 360 0; loop: true; dur: 8800; easing: linear">
+      <a-sphere 
+        id="mercury" 
+        position="3.9 1.25 0" 
+        radius="0.1" 
+        src="planets_textures/mercury.jpeg" 
+        rotation ="0 0 0" 
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 58650"
+        data-radius="0.1"
+        class="collidable"
+      ></a-sphere>
+    </a-entity>
+
+    <a-entity id="venus-orbit" rotation="0 0 0" animation="property: rotation; to: 0 360 0; loop: true; dur: 22470; easing: linear">
+      <a-sphere 
+        id="venus" 
+        position="7.2 1.25 0" 
+        radius="0.2" 
+        src="planets_textures/venus.jpeg" 
+        rotation ="0 0 0" 
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 243000"
+        data-radius="0.2"
+        class="collidable"
+      ></a-sphere>
+    </a-entity>
+    
+    <a-entity id="earth-orbit" rotation="0 0 0" animation="property: rotation; to: 0 360 0; loop: true; dur: 60000; easing: linear">
+      <a-sphere
+        id="earth"
+        position="10 1.25 0"
+        radius="0.3"
+        src="planets_textures/earth.jpeg"
+        rotation="0 0 0"
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 864"
+        class="collidable"
+        data-radius="0.3"
+      ></a-sphere>
+    </a-entity>
+
+    <a-entity id="mars-orbit" rotation="0 0 0" animation="property: rotation; to: 0 360 0; loop: true; dur: 68700; easing: linear">
+      <a-sphere 
+        id="mars" 
+        position="15.2 1.25 0" 
+        radius="0.2" 
+        src="planets_textures/mars.jpeg" 
+        rotation ="0 0 0" 
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 8864"
+        data-radius="0.2" 
+        class="collidable"
+      ></a-sphere>
+    </a-entity>
+
+    <a-entity id="jupiter-orbit" animation="property: rotation; to: 0 360 0; loop: true; dur: 99999; easing: linear">
+      <a-sphere 
+        id="jupiter" 
+        position="26 1.25 0" 
+        radius="1.5" 
+        src="planets_textures/jupiter.jpeg" 
+        rotation ="0 0 0" 
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 3528"
+        data-radius="1.5" 
+        class="collidable"
+      ></a-sphere>
+    </a-entity>
+
+    <a-entity id="saturn-orbit" animation="property: rotation; to: 0 360 0; loop: true; dur: 107590; easing: linear">
+      <a-sphere 
+        id="saturn" 
+        position="47.5 1.25 0" 
+        radius="1.2"
+        src="planets_textures/saturn.jpeg" 
+        rotation ="0 0 0" 
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 3952"
+        data-radius="1.2" 
+        class="collidable"
+      ></a-sphere>
+      <a-ring
+        id="saturn-ring"
+        position="47.5 1.25 0"
+        rotation="90 0 0"
+        radius-inner="1.4"
+        radius-outer="2.2"
+        material="src: planets_textures/saturn_ring.jpg; transparent: true; opacity: 0.9; side: double;"
+      ></a-ring>
+    </a-entity>
+
+    <a-entity id="uranus-orbit" animation="property: rotation; to: 0 360 0; loop: true; dur: 306870; easing: linear">
+      <a-sphere 
+        id="uranus" 
+        position="58 1.25 0" 
+        radius="0.7" 
+        src="planets_textures/uranus.jpeg" 
+        rotation ="0 0 0" 
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 60480"
+        data-radius="0.7" 
+        class="collidable"
+      ></a-sphere>
+    </a-entity>
+
+    <a-entity id="neptune-orbit" animation="property: rotation; to: 0 360 0; loop: true; dur: 601900; easing: linear">
+      <a-sphere 
+        id="neptune" 
+        position="86 1.25 0" 
+        radius="0.7" 
+        src="planets_textures/neptune.jpeg" 
+        rotation ="0 0 0" 
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 56420"
+        data-radius="0.7" 
+        class="collidable"
+      ></a-sphere>
+    </a-entity>
 
     <a-sphere
       id="alien-dog"
@@ -193,7 +298,7 @@
       camera
       look-controls="pointerLockEnabled: true"
       wasd-controls="acceleration: 100; fly: true"
-      position="10 1.6 -3"
+      position="15 1.6 0"
     ></a-entity>
   </a-scene>
 
@@ -222,6 +327,7 @@
       document.getElementById("info-panel").style.display = "block";
       document.getElementById("controls").style.display = "block";
 
+      randomizePlanetPositions();
       placeAlienDog();
 
       const scene = document.querySelector("a-scene");
@@ -252,7 +358,7 @@
     }
 
     function placeAlienDog() {
-      const earth = { position: new THREE.Vector3(10, 1.25, -5), radius: 0.3 };
+      const earth = { position: new THREE.Vector3(10, 1.25, 0), radius: 0.3 };
       const theta = Math.random() * Math.PI * 2;
       const phi = Math.acos(2 * Math.random() - 1);
       const x = earth.position.x + (earth.radius + 0.3) * Math.sin(phi) * Math.cos(theta);
@@ -261,6 +367,40 @@
       const alienDog = document.getElementById("alien-dog");
       alienDog.setAttribute("position", `${x} ${y} ${z}`);
     }
+
+  function randomizePlanetPositions() {
+    const planetIds = [
+      "mercury",
+      "venus",
+      "earth",
+      "mars",
+      "jupiter",
+      "saturn",
+      "uranus",
+      "neptune"
+    ];
+
+    planetIds.forEach(id => {
+      const planet = document.getElementById(id);
+      if (!planet) return;
+
+      // Get the current position
+      const pos = planet.getAttribute("position");
+
+      // Randomize the z position within a range (e.g. ±5 units)
+      const zOffset = (Math.random() - 0.5) * 50; // random between -5 and +5
+      const yOffset = (Math.random() - 0.5) * 10; // small vertical variation
+
+      planet.setAttribute("position", `${pos.x} ${pos.y + yOffset} ${zOffset}`);
+
+      // Update saturn's ring
+      if (id === "saturn") {
+        const ring = document.getElementById("saturn-ring");
+        ring.setAttribute("position", `${pos.x} ${pos.y + yOffset} ${zOffset}`);
+      }
+    });
+  }
+
 
     window.addEventListener("load", startCountdown);
 
@@ -295,17 +435,21 @@
           return;
         }
 
-        for (const planet of this.planets) {
-          const distance = playerPos.distanceTo(planet.position);
-          if (distance < planet.radius + 0.3) {
-            if (planet.element.id === "sun") {
-              this.die("You got too close to the Sun and were incinerated!");
-            } else {
-              this.el.setAttribute("position", this.lastSafePosition);
-            }
-            return;
+      for (const planet of this.planets) {
+        const worldPos = new THREE.Vector3();
+        planet.element.object3D.updateMatrixWorld(true);
+        planet.element.object3D.getWorldPosition(worldPos);
+
+        const distance = playerPos.distanceTo(worldPos);
+        if (distance < planet.radius + 0.3) {
+          if (planet.element.id === "sun") {
+            this.die("You got too close to the Sun and were incinerated!");
+          } else {
+            this.el.setAttribute("position", this.lastSafePosition);
           }
+          return;
         }
+      }
 
         for (const collectible of this.collectibles) {
           const distance = playerPos.distanceTo(collectible.object3D.position);
