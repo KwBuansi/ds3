@@ -1,160 +1,364 @@
-<html>
-  <head>
-    <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
-    <script>
-      AFRAME.registerComponent('display-position', {
-        tick: function () {
-          const pos = this.el.object3D.position;
-          const textEl = document.querySelector('#position-text');
-          if (textEl) {
-            textEl.setAttribute('value', `x: ${pos.x.toFixed(2)} y: ${pos.y.toFixed(2)} z: ${pos.z.toFixed(2)}`);
-          }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Solar System Explorer</title>
+  <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: "Arial", sans-serif;
+      background: #000;
+    }
+
+    #info-panel {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      z-index: 1000;
+      max-width: 300px;
+      border: 1px solid #444;
+    }
+
+    #controls {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.7);
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      z-index: 1000;
+      border: 1px solid #444;
+    }
+
+    #position-display {
+      font-family: monospace;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 5px;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+
+    #mission-briefing,
+    #death-overlay,
+    #success-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      color: white;
+      text-align: center;
+    }
+
+    #mission-briefing {
+      display: flex;
+      background: black;
+      z-index: 1003;
+    }
+
+    #mission-text {
+      font-size: 36px;
+      margin-bottom: 40px;
+      color: white;
+      max-width: 700px;
+      line-height: 1.4;
+      font-weight: bold;
+    }
+
+    #countdown {
+      font-size: 72px;
+      color: #ff4444;
+      font-weight: bold;
+    }
+
+    #death-overlay {
+      background: black;
+      z-index: 1002;
+    }
+
+    #death-message {
+      font-size: 42px;
+      margin-bottom: 30px;
+      color: #ff4444;
+      font-weight: bold;
+    }
+
+    #respawn-button,
+    #play-again-button {
+      background: #4fc3f7;
+      color: black;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 20px;
+    }
+
+    #success-overlay {
+      background: black;
+      z-index: 1004;
+    }
+
+    #success-message {
+      font-size: 42px;
+      margin-bottom: 30px;
+      color: #4fc3f7;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div id="mission-briefing">
+    <div id="mission-text">
+      Your boss's alien dog is missing!<br />
+      Your mission is to help them find the alien dog somewhere in the solar system.
+    </div>
+    <div id="countdown">10</div>
+  </div>
+
+  <div id="success-overlay">
+    <div id="success-message">
+      Your boss is very happy!<br />
+      Thank you for finding the alien dog!
+    </div>
+    <button id="play-again-button">Play Again</button>
+  </div>
+
+  <div id="death-overlay">
+    <div id="death-message"></div>
+    <button id="respawn-button">Respawn</button>
+  </div>
+
+  <div id="info-panel" style="display: none">
+    <h1>Find the Alien Dog</h1>
+    <div id="position-display">Position: Loading...</div>
+  </div>
+
+  <div id="controls" style="display: none">
+    <h2>Controls:</h2>
+    <ul>
+      <li>WASD - Move (based on camera direction)</li>
+      <li>Mouse - Look around</li>
+      <li>Mouse Click - Lock/Unlock pointer</li>
+    </ul>
+  </div>
+
+  <a-scene style="display: none">
+    <a-sky src="planets_textures/nightsky.jpg"></a-sky>
+
+    <a-sphere
+      id="sun"
+      position="0 1.25 -5"
+      radius="3"
+      src="planets_textures/sun.jpeg"
+      rotation="0 0 0"
+      animation="property: rotation; to: 0 360 0; loop: true; dur: 22224"
+      class="collidable"
+      data-radius="3"
+    ></a-sphere>
+
+    <a-sphere
+      id="earth"
+      position="10 1.25 -5"
+      radius="0.3"
+      src="planets_textures/earth.jpeg"
+      rotation="0 0 0"
+      animation="property: rotation; to: 0 360 0; loop: true; dur: 864"
+      class="collidable"
+      data-radius="0.3"
+    ></a-sphere>
+
+    <a-sphere
+      id="alien-dog"
+      radius="0.2"
+      color="#00ff00"
+      class="collectible"
+      data-radius="0.2"
+    ></a-sphere>
+
+    <a-entity
+      id="player"
+      camera
+      look-controls="pointerLockEnabled: true"
+      wasd-controls="acceleration: 100; fly: true"
+      position="10 1.6 -3"
+    ></a-entity>
+  </a-scene>
+
+  <script>
+    console.log("Script loaded correctly!");
+
+    let countdown = 10;
+    const countdownElement = document.getElementById("countdown");
+    const missionBriefing = document.getElementById("mission-briefing");
+
+    function startCountdown() {
+      const countdownInterval = setInterval(() => {
+        countdown--;
+        countdownElement.textContent = countdown;
+
+        if (countdown <= 0) {
+          clearInterval(countdownInterval);
+          startGame();
         }
+      }, 1000);
+    }
+
+    function startGame() {
+      missionBriefing.style.display = "none";
+      document.querySelector("a-scene").style.display = "block";
+      document.getElementById("info-panel").style.display = "block";
+      document.getElementById("controls").style.display = "block";
+
+      placeAlienDog();
+
+      const scene = document.querySelector("a-scene");
+      const camera = document.querySelector("[camera]");
+      scene.addEventListener("click", () => {
+        camera.components["look-controls"].pointerLock();
       });
-      </script>
-      <script>
-      AFRAME.registerComponent('kill-on-touch', {
-        schema: { 
-          target: { type: 'selector' }, 
-          radius: { type: 'number', default: 1 },
-          maxDistance: { type: 'number', default: 300}
-        },
+    }
 
-        init: function () {
-          const fade = document.createElement('a-entity');
-          fade.setAttribute('id', 'fade-overlay');
-          fade.setAttribute('geometry', 'primitive: plane; height: 100; width: 100');
-          fade.setAttribute('material', 'color: black; opacity: 0; side: double');
-          fade.setAttribute('position', '0 0 -1');
-          fade.setAttribute('visible', 'true');
-          this.el.sceneEl.camera.el.appendChild(fade);
-          this.fade = fade;
-          this.isDead = false;
-        },
+    function restartGame() {
+      const player = document.querySelector("#player");
+      const collisionDetector = player.components["collision-detector"];
 
-        tick: function () {
-          if (this.isDead || !this.data.target) return;
+      if (collisionDetector) {
+        collisionDetector.isDead = false;
+        collisionDetector.gameCompleted = false;
+        player.setAttribute("position", "10 1.6 -3");
+        collisionDetector.lastSafePosition.set(10, 1.6, -3);
+        player.setAttribute("wasd-controls", "acceleration: 100; fly: true");
+        player.setAttribute("look-controls", "pointerLockEnabled: true");
+      }
 
-            const playerPos = this.el.object3D.position;
-            const targetPos = this.data.target.object3D.position;
-            const distance = playerPos.distanceTo(targetPos);
+      placeAlienDog();
+      document.getElementById("success-overlay").style.display = "none";
+      document.querySelector("a-scene").style.display = "block";
+      document.getElementById("info-panel").style.display = "block";
+      document.getElementById("controls").style.display = "block";
+    }
 
-          //If player is out-of-bounds, they die
-          if (distance < this.data.radius || distance > this.data.maxDistance) {
-            this.die();
+    function placeAlienDog() {
+      const earth = { position: new THREE.Vector3(10, 1.25, -5), radius: 0.3 };
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const x = earth.position.x + (earth.radius + 0.3) * Math.sin(phi) * Math.cos(theta);
+      const y = earth.position.y + (earth.radius + 0.3) * Math.sin(phi) * Math.sin(theta);
+      const z = earth.position.z + (earth.radius + 0.3) * Math.cos(phi);
+      const alienDog = document.getElementById("alien-dog");
+      alienDog.setAttribute("position", `${x} ${y} ${z}`);
+    }
+
+    window.addEventListener("load", startCountdown);
+
+    document.getElementById("play-again-button").addEventListener("click", restartGame);
+
+    AFRAME.registerComponent("collision-detector", {
+      init: function () {
+        this.collidables = document.querySelectorAll(".collidable");
+        this.collectibles = document.querySelectorAll(".collectible");
+        this.maxDistance = 400;
+        this.isDead = false;
+        this.gameCompleted = false;
+        this.lastSafePosition = new THREE.Vector3(10, 1.6, -3);
+        this.planets = [];
+        this.collidables.forEach((planet) => {
+          this.planets.push({
+            element: planet,
+            radius: parseFloat(planet.getAttribute("data-radius")),
+            position: planet.object3D.position,
+          });
+        });
+      },
+
+      tick: function () {
+        if (this.isDead || this.gameCompleted) return;
+        const playerPos = this.el.object3D.position;
+        const currentPosition = playerPos.clone();
+        const distanceFromCenter = playerPos.length();
+
+        if (distanceFromCenter > this.maxDistance) {
+          this.die("You went too far and lost contact with Earth.");
+          return;
+        }
+
+        for (const planet of this.planets) {
+          const distance = playerPos.distanceTo(planet.position);
+          if (distance < planet.radius + 0.3) {
+            if (planet.element.id === "sun") {
+              this.die("You got too close to the Sun and were incinerated!");
+            } else {
+              this.el.setAttribute("position", this.lastSafePosition);
+            }
             return;
           }
-        },
-
-        die: function () {
-          this.isDead = true;
-          console.log('You are DEAD!💀')
-
-          // Disable controls
-          this.el.removeAttribute('wasd-controls');
-          this.el.removeAttribute('look-controls');
-          this.controlsDisabled = true;
-          
-          const fade = this.fade;
-          const material = fade.getAttribute('material');
-
-          let opacity = 0;
-          const fadeInterval = setInterval(() => {
-            opacity += 0.05;
-            fade.setAttribute('material', 'opacity', opacity);
-            if (opacity >= 1) {
-              clearInterval(fadeInterval);
-
-              setTimeout(() => {
-                this.el.setAttribute('position', '0 1.6 0');
-                this.respawn();
-              }, 500);
-            }
-          }, 50);
-        },
-
-        respawn: function () {
-          let opacity = 1;
-          const fade = this.fade;
-          const fadeOut = setInterval(() => {
-            opacity -= 0.05;
-            fade.setAttribute('material', 'opacity', opacity);
-            if (opacity <= 0) {
-              clearInterval(fadeOut);
-              // Reenable controls
-              if (this.controlsDisabled) {
-              this.el.setAttribute('wasd-controls', 'acceleration:100: fly:true');
-              this.el.setAttribute('look-controls', 'pointerLockEnabled: true');
-              this.controlsDisabled = false;
-
-              }
-              this.isDead = false;
-            }
-          }, 50);
         }
-      });
 
-      //Apply HUD
-      window.addEventListener('load', () => {
-        document.querySelector('#player').setAttribute('display-position', '');
-      });
-    </script>
-  </head>
-  <body>
-    <a-scene>
-        <a-sky src="planets_textures/nightsky.jpg"></a-sky>
+        for (const collectible of this.collectibles) {
+          const distance = playerPos.distanceTo(collectible.object3D.position);
+          const collectibleRadius = parseFloat(collectible.getAttribute("data-radius"));
+          if (distance < collectibleRadius + 0.5) {
+            this.completeGame();
+            return;
+          }
+        }
 
-        <a-sphere id="sun" position="0 1.25 -5" radius="3" 
-          src="planets_textures/sun.jpeg" rotation ="0 0 0" 
-          animation="property: rotation; to: 0 360 0; loop: true; dur: 22224"></a-sphere>
-        
-        <a-sphere id="mercury" position="3.9 1.25 -5" radius="0.1" 
-        src="planets_textures/mercury.jpeg" rotation ="0 0 0" 
-        animation="property: rotation; to: 0 360 0; loop: true; dur: 58650"></a-sphere>
-        
-        <a-sphere id="venus" position="7.2 1.25 -5" radius="0.2" 
-          src="planets_textures/venus.jpeg" rotation ="0 0 0" 
-          animation="property: rotation; to: 0 360 0; loop: true; dur: 243000"></a-sphere>
-        
-        <a-sphere id="earth" position="10 1.25 -5" radius="0.3" 
-          src="planets_textures/earth.jpeg" rotation ="0 0 0" 
-          animation="property: rotation; to: 0 360 0; loop: true; dur: 864"></a-sphere>
-        
-        <a-sphere id="mars" position="15.2 1.25 -5" radius="0.2" 
-          src="planets_textures/mars.jpeg" rotation ="0 0 0" 
-          animation="property: rotation; to: 0 360 0; loop: true; dur: 8864"></a-sphere>
-        
-        <a-sphere id="jupiter" position="52 1.25 -5" radius="1.5" 
-          src="planets_textures/jupiter.jpeg" rotation ="0 0 0" 
-          animation="property: rotation; to: 0 360 0; loop: true; dur: 3528"></a-sphere>
-        
-        <a-sphere id="saturn" position="95 1.25 -5" radius="1.2" 
-          src="planets_textures/saturn.jpeg" rotation ="0 0 0" 
-          animation="property: rotation; to: 0 360 0; loop: true; dur: 3952"></a-sphere>
-        
-        <a-sphere id="uranus" position="192 1.25 -5" radius="0.7" 
-          src="planets_textures/uranus.jpeg" rotation ="0 0 0" 
-          animation="property: rotation; to: 0 360 0; loop: true; dur: 60480"></a-sphere>
-        
-        <a-sphere id="neptune" position="301 1.25 -5" radius="0.7" 
-          src="planets_textures/neptune.jpeg" rotation ="0 0 0" 
-          animation="property: rotation; to: 0 360 0; loop: true; dur: 56420"></a-sphere>
-        
-        <a-entity 
-          id="player"
-          camera 
-          look-controls="pointerLockEnabled: true"
-          wasd-controls="acceleration:100; fly:true" 
-          position="0 1.6 0"
-          kill-on-touch="target: #sun; radius: 3.5"
-          >
-        <a-entity id="hud" position="0 -0.5 -1">
-          <a-text id="position-text" value=""
-                  color="white"
-                  align="center"
-                  scale="0.5 0.5 0.5">
-          </a-text>        
-      </a-entity>
-    </a-scene>
-  </body>
+        if (currentPosition.distanceTo(this.lastSafePosition) > 0.1) {
+          this.lastSafePosition.copy(currentPosition);
+        }
+      },
+
+      die: function (message) {
+        this.isDead = true;
+        this.el.removeAttribute("wasd-controls");
+        this.el.removeAttribute("look-controls");
+        document.getElementById("death-message").textContent = message;
+        document.getElementById("death-overlay").style.display = "flex";
+      },
+
+      completeGame: function () {
+        this.gameCompleted = true;
+        this.el.removeAttribute("wasd-controls");
+        this.el.removeAttribute("look-controls");
+        document.getElementById("success-overlay").style.display = "flex";
+      },
+
+      respawn: function () {
+        this.isDead = false;
+        this.el.setAttribute("position", "10 1.6 -3");
+        this.lastSafePosition.set(10, 1.6, -3);
+        this.el.setAttribute("wasd-controls", "acceleration: 100; fly: true");
+        this.el.setAttribute("look-controls", "pointerLockEnabled: true");
+        document.getElementById("death-overlay").style.display = "none";
+      },
+    });
+
+    document.getElementById("respawn-button").addEventListener("click", function () {
+      const player = document.querySelector("#player");
+      player.components["collision-detector"].respawn();
+    });
+
+    const player = document.querySelector("#player");
+    const positionDisplay = document.querySelector("#position-display");
+    setInterval(() => {
+      const pos = player.getAttribute("position");
+      positionDisplay.textContent = `Position: X:${pos.x.toFixed(1)} Y:${pos.y.toFixed(1)} Z:${pos.z.toFixed(1)}`;
+    }, 100);
+
+    player.setAttribute("collision-detector", "");
+  </script>
+</body>
 </html>
