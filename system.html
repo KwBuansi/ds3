@@ -90,6 +90,7 @@
     #music-hud { z-index: 9999; pointer-events: auto; }
     #music-hud * { pointer-events: auto; }
   </style>
+  <script src="js/music-config.js"></script>
 </head>
 <body>
   <!-- Hidden background audio (autoplay best-effort) -->
@@ -200,7 +201,7 @@
     </a-entity>
 
     <!-- Alien dog as billboard sprite -->
-    <a-entity id="alien-dog" class="collectible" data-radius="0.15" billboard>
+    <a-entity id="alien-dog" class="collectible" data-radius="0.15" billboard alien-dog-barking>
       <a-plane id="alien-dog-visual" position="0 0 0" width="0.3" height="0.3" src="models/alien dog.png"
         material="transparent: true; alphaTest: 0.5; side: double;" rotation="0 0 0"></a-plane>
     </a-entity>
@@ -229,6 +230,90 @@
         }
       }
     });
+
+    // Alien Dog Barking Component
+  AFRAME.registerComponent('alien-dog-barking', {
+    init: function() {
+      this.barkSound = null;
+      this.barkInterval = null;
+      this.isNearDog = false;
+      this.player = document.querySelector('#player');
+      
+      this.loadBarkSound();
+    },
+
+  loadBarkSound: function() {
+    this.barkSound = new Audio();
+    this.barkSound.src = PlanetMusicConfig.alienDog.barkSound;
+    this.barkSound.volume = 0;
+    this.barkSound.preload = 'auto';
+    this.barkSound.load();
+  },
+
+  tick: function() {
+    if (!this.player || !this.barkSound) return;
+    
+    const playerPos = this.player.object3D.position;
+    const dogPos = this.el.object3D.position;
+    const distance = playerPos.distanceTo(dogPos);
+    
+    const detectionRadius = PlanetMusicConfig.alienDog.detectionRadius;
+    
+    // Check if player entered/exited barking range
+    if (distance <= detectionRadius && !this.isNearDog) {
+      this.startBarking();
+      this.isNearDog = true;
+    } else if (distance > detectionRadius && this.isNearDog) {
+      this.stopBarking();
+      this.isNearDog = false;
+    }
+    
+    // Adjust bark volume based on distance (closer = louder)
+    if (this.isNearDog) {
+      const volume = PlanetMusicConfig.alienDog.barkVolume * 
+                    (1 - (distance / detectionRadius));
+      this.barkSound.volume = Math.max(0.1, volume);
+    }
+  },
+
+  startBarking: function() {
+    if (this.barkInterval) return;
+    
+    const bark = () => {
+      if (this.isNearDog && this.barkSound) {
+        this.barkSound.currentTime = 0;
+        this.barkSound.play().catch(e => console.log('Bark play failed:', e));
+      }
+    };
+    
+    // Initial bark
+    bark();
+    
+    // Set up random barking interval
+    this.barkInterval = setInterval(() => {
+      bark();
+    }, this.getRandomBarkInterval());
+  },
+
+  stopBarking: function() {
+    if (this.barkInterval) {
+      clearInterval(this.barkInterval);
+      this.barkInterval = null;
+    }
+    if (this.barkSound) {
+      this.barkSound.volume = 0;
+    }
+  },
+
+  getRandomBarkInterval: function() {
+    const config = PlanetMusicConfig.alienDog.barkInterval;
+    return Math.random() * (config.max - config.min) + config.min;
+  },
+
+  remove: function() {
+    this.stopBarking();
+  }
+});
 
     let countdown = 10;
     const countdownElement = document.getElementById("countdown");
